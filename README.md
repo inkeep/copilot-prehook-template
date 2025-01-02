@@ -1,0 +1,1 @@
+# copilot-prehook-template
