@@ -81,6 +81,7 @@ const CopilotSmartAssistContextRequestSchema = z.object({
     z.unknown().refine(val => !!val, { message: 'Value must be truthy' }),
   ),
   messages: z.array(MessageSchema),
+  ticketingPlatformType: z.enum(['zendesk', 'github', 'plain', 'other']),
 });
 
 type CopilotSmartAssistContextRequest = z.infer<typeof CopilotSmartAssistContextRequestSchema>;
