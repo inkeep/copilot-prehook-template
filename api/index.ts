@@ -1,138 +1,84 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { z } from 'zod';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import {
+	CopilotSmartAssistContextRequestSchema,
+	type CopilotSmartAssistContextResponse,
+	type MessageType,
+} from "../inkeepSupportCopilotSchemas";
 
-const Attribute = z
-  .object({
-    label: z.string().describe("A short identifier or name for the attribute (e.g. 'subscription_plan')."),
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+	if (req.method !== "POST") {
+		return res.status(405).json({
+			success: false,
+			error: "Method not allowed",
+		});
+	}
 
-    value: z
-      .string()
-      .describe("The attribute's value, often a string that can be displayed or processed (e.g. 'premium')."),
+	try {
+		const parsedRequest = CopilotSmartAssistContextRequestSchema.safeParse(
+			req.body,
+		);
 
-    description: z
-      .string()
-      .nullish()
-      .describe('An optional explanation or context about how to interpret or use this attribute.'),
+		if (!parsedRequest.success) {
+			console.log(
+				parsedRequest.error.errors.map((err) => err.message).join(", "),
+			);
+			return res.status(400).json({
+				success: false,
+				error: `Invalid request: ${parsedRequest.error.errors.map((err) => err.message).join(", ")}`,
+			});
+		}
 
-    useWhen: z
-      .string()
-      .nullish()
-      .describe(
-        "An optional condition or scenario indicating when this attribute should be considered (e.g. 'when user asks about billing').",
-      ),
-  })
-  .describe('A structured piece of contextual data (attribute) about the user or organization.');
+		const {
+			ticketId,
+			ticketingPlatformType,
+			ticketAttributesData,
+			userAttributesData,
+			orgAttributesData,
+			messages,
+		} = parsedRequest.data;
+		const result = await fetchYourData({
+			ticketId,
+			ticketingPlatformType,
+			ticketAttributesData,
+			userAttributesData,
+			orgAttributesData,
+			messages,
+		});
+		return res.json({ success: true, data: result });
+	} catch (error) {
+		console.error("Error processing request:", error);
+		return res
+			.status(500)
+			.json({ success: false, error: "Internal server error" });
+	}
+}
 
-const CopilotSmartAssistContextHookResponse = z
-  .object({
-    userAttributes: z
-      .array(Attribute)
-      .nullish()
-      .describe('A list of user-specific attributes providing additional context about the end-user.'),
+async function fetchYourData({
+	ticketId,
+	ticketingPlatformType,
+	ticketAttributesData,
+	userAttributesData,
+	orgAttributesData,
+	messages,
+}: {
+	ticketId: string;
+	ticketingPlatformType: string;
+	ticketAttributesData: Record<string, unknown>;
+	userAttributesData: Record<string, unknown>;
+	orgAttributesData: Record<string, unknown>;
+	messages: MessageType[];
+}): Promise<CopilotSmartAssistContextResponse> {
+	// TODO: Write your business logic here
 
-    organizationAttributes: z
-      .array(Attribute)
-      .nullish()
-      .describe(
-        "A list of organization-specific attributes providing additional context about the user's organization or account.",
-      ),
+	// TODO: Add any custom instructions or guidance to influence the copilot's response. This is an example.
+	const prompt = `
+	These are the user attributes and organization attributes.
+	If the user or organization is a subscriber to the Enterprise plan, it is important to note that in the response to the support agent.
+	`;
 
-    prompt: z
-      .string()
-      .nullish()
-      .describe(
-        "Optional custom instructions or guidance to influence the copilot's response (e.g. special handling instructions, tone guidelines).",
-      ),
-  })
-  .describe(
-    "The schema returned by the customer-owned endpoint, providing structured context and optional prompts to guide the copilot's responses.",
-  );
-
-type CopilotSmartAssistContextResponse = z.infer<typeof CopilotSmartAssistContextHookResponse>;
-
-const MessageSchema = z.object({
-  id: z.string(),
-  createdAt: z.date().optional(),
-  content: z.string(),
-  authorId: z.string(),
-  authorType: z.enum(['user', 'member']),
-  authorName: z.string().optional(),
-  files: z.array(
-    z.object({
-      id: z.string(),
-      url: z.string(),
-    }),
-  ),
-  isInternalComment: z.boolean().optional(),
-});
-
-const CopilotSmartAssistContextRequestSchema = z.object({
-  ticketId: z.string(),
-  ticketAttributesData: z.record(
-    z.string(),
-    z.unknown().refine(val => !!val, { message: 'Value must be truthy' }),
-  ),
-  userAttributesData: z.record(
-    z.string(),
-    z.unknown().refine(val => !!val, { message: 'Value must be truthy' }),
-  ),
-  orgAttributesData: z.record(
-    z.string(),
-    z.unknown().refine(val => !!val, { message: 'Value must be truthy' }),
-  ),
-  messages: z.array(MessageSchema),
-  ticketingPlatformType: z.enum(['zendesk', 'github', 'plain', 'other']),
-});
-
-type CopilotSmartAssistContextRequest = z.infer<typeof CopilotSmartAssistContextRequestSchema>;
-
-
-type ApiResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
-
-export default async function handler(
-    req: VercelRequest,
-    res: VercelResponse
-  ) {
-    if (req.method !== 'POST') {
-      return res.status(405).json({
-        success: false,
-        error: 'Method not allowed'
-      });
-    }
-  
-    try {
-      const parsedRequest = CopilotSmartAssistContextRequestSchema.safeParse(req.body);
-  
-      if (!parsedRequest.success) {
-        console.log(parsedRequest.error.errors.map(err => err.message).join(', '));
-        return res.status(400).json({
-          success: false,
-          error: `Invalid request: ${parsedRequest.error.errors.map(err => err.message).join(', ')}`,
-        });
-      }
-  
-      const { userAttributesData } = parsedRequest.data;
-      const result = await fetchYourData(userAttributesData);
-      return res.json({ success: true, data: result });
-    } catch (error) {
-      console.error('Error processing request:', error);
-      return res.status(500).json({ success: false, error: 'Internal server error' });
-    }
-  }
-
-
-async function fetchYourData(userAttributesData: Record<string, unknown>): Promise<CopilotSmartAssistContextResponse> {
-  // make 3rd party hook call to stripe, etc
-
-  console.log('userAttributesData', userAttributesData);
-
-  return {
-    userAttributes: [],
-    organizationAttributes: [],
-    prompt: null,
-  };
+	return {
+		userAttributes: [],
+		organizationAttributes: [],
+		prompt,
+	};
 }
