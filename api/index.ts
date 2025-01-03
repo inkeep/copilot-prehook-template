@@ -20,11 +20,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 		if (!parsedRequest.success) {
 			console.log(
-				parsedRequest.error.errors.map((err) => err.message).join(", "),
+				parsedRequest.error.errors
+					.map((err) => `${err.path.join(".")}: ${err.message}`)
+					.join(", "),
 			);
 			return res.status(400).json({
 				success: false,
-				error: `Invalid request: ${parsedRequest.error.errors.map((err) => err.message).join(", ")}`,
+				error: `Invalid request: ${parsedRequest.error.errors
+					.map((err) => `${err.path.join(".")}: ${err.message}`)
+					.join(", ")}`,
 			});
 		}
 
