@@ -108,9 +108,10 @@ export default async function handler(
       const parsedRequest = CopilotSmartAssistContextRequestSchema.safeParse(req.body);
   
       if (!parsedRequest.success) {
+        console.log(parsedRequest.error.errors.map(err => err.message).join(', '));
         return res.status(400).json({
           success: false,
-          error: `Invalid request: ${parsedRequest.error.message}`,
+          error: `Invalid request: ${parsedRequest.error.errors.map(err => err.message).join(', ')}`,
         });
       }
   
