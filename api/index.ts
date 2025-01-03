@@ -70,15 +70,18 @@ async function fetchYourData({
 }): Promise<CopilotSmartAssistContextResponse> {
 	// TODO: Write your business logic here
 
-	// TODO: Add any custom instructions or guidance to influence the copilot's response. This is an example.
+	// TODO: Add any custom instructions or guidance to influence the copilot's response. Example:
 	const prompt = `
-	These are the user attributes and organization attributes.
-	If the user or organization is a subscriber to the Enterprise plan, it is important to note that in the response to the support agent.
+	These are the attributes from our internal system.
+	If the user or organization is a subscriber to the Enterprise plan: 
+		- It is important to note this in the response to the support agent.
+		- The draft answer should have salutations and signatures.
 	`;
 
 	return {
 		userAttributes: [],
 		organizationAttributes: [],
+		ticketAttributes: [],
 		prompt,
 	};
 }

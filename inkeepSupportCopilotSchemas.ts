@@ -1,5 +1,44 @@
 import { z } from "zod";
 
+const MessageSchema = z.object({
+	id: z.string(),
+	createdAt: z.preprocess(
+		(arg) => (arg ? new Date(arg as string) : undefined),
+		z.date().optional(),
+	),
+	content: z.string(),
+	authorId: z.string(),
+	authorType: z.enum(["user", "member"]),
+	authorName: z.string().optional(),
+	files: z.array(
+		z.object({
+			id: z.string(),
+			url: z.string(),
+		}),
+	),
+	isInternalComment: z.boolean().optional(),
+});
+
+export type MessageType = z.infer<typeof MessageSchema>;
+
+export const CopilotSmartAssistContextRequestSchema = z.object({
+	ticketId: z.string(),
+	ticketAttributesData: z.record(
+		z.string(),
+		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
+	),
+	userAttributesData: z.record(
+		z.string(),
+		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
+	),
+	orgAttributesData: z.record(
+		z.string(),
+		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
+	),
+	messages: z.array(MessageSchema),
+	ticketingPlatformType: z.enum(["zendesk", "github", "plain", "other"]),
+});
+
 const Attribute = z
 	.object({
 		label: z
@@ -48,6 +87,13 @@ const CopilotSmartAssistContextHookResponse = z
 				"A list of organization-specific attributes providing additional context about the user's organization or account.",
 			),
 
+		ticketAttributes: z
+			.array(Attribute)
+			.nullish()
+			.describe(
+				"A list of ticket-specific attributes providing additional context about the ticket.",
+			),
+
 		prompt: z
 			.string()
 			.nullish()
@@ -62,42 +108,3 @@ const CopilotSmartAssistContextHookResponse = z
 export type CopilotSmartAssistContextResponse = z.infer<
 	typeof CopilotSmartAssistContextHookResponse
 >;
-
-const MessageSchema = z.object({
-	id: z.string(),
-	createdAt: z.preprocess(
-		(arg) => (arg ? new Date(arg as string) : undefined),
-		z.date().optional(),
-	),
-	content: z.string(),
-	authorId: z.string(),
-	authorType: z.enum(["user", "member"]),
-	authorName: z.string().optional(),
-	files: z.array(
-		z.object({
-			id: z.string(),
-			url: z.string(),
-		}),
-	),
-	isInternalComment: z.boolean().optional(),
-});
-
-export type MessageType = z.infer<typeof MessageSchema>;
-
-export const CopilotSmartAssistContextRequestSchema = z.object({
-	ticketId: z.string(),
-	ticketAttributesData: z.record(
-		z.string(),
-		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
-	),
-	userAttributesData: z.record(
-		z.string(),
-		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
-	),
-	orgAttributesData: z.record(
-		z.string(),
-		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
-	),
-	messages: z.array(MessageSchema),
-	ticketingPlatformType: z.enum(["zendesk", "github", "plain", "other"]),
-});
