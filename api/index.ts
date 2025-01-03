@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
-	CopilotSmartAssistContextRequestSchema,
-	type CopilotSmartAssistContextResponse,
+	CopilotSmartAssistContextHookRequestSchema,
+	type CopilotSmartAssistContextHookResponse,
 	type MessageType,
 } from "../inkeepSupportCopilotSchemas";
 
@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	}
 
 	try {
-		const parsedRequest = CopilotSmartAssistContextRequestSchema.safeParse(
+		const parsedRequest = CopilotSmartAssistContextHookRequestSchema.safeParse(
 			req.body,
 		);
 
@@ -67,7 +67,7 @@ async function fetchYourData({
 	userAttributesData: Record<string, unknown>;
 	orgAttributesData: Record<string, unknown>;
 	messages: MessageType[];
-}): Promise<CopilotSmartAssistContextResponse> {
+}): Promise<CopilotSmartAssistContextHookResponse> {
 	// TODO: Write your business logic here
 
 	// TODO: Add any custom instructions or guidance to influence the copilot's response. Example:

@@ -21,7 +21,7 @@ const MessageSchema = z.object({
 
 export type MessageType = z.infer<typeof MessageSchema>;
 
-export const CopilotSmartAssistContextRequestSchema = z.object({
+export const CopilotSmartAssistContextHookRequestSchema = z.object({
 	ticketId: z.string(),
 	ticketAttributesData: z.record(
 		z.string(),
@@ -71,7 +71,7 @@ const Attribute = z
 		"A structured piece of contextual data (attribute) about the user or organization.",
 	);
 
-const CopilotSmartAssistContextHookResponse = z
+const CopilotSmartAssistContextHookResponseSchema = z
 	.object({
 		userAttributes: z
 			.array(Attribute)
@@ -105,6 +105,6 @@ const CopilotSmartAssistContextHookResponse = z
 		"The schema returned by the customer-owned endpoint, providing structured context and optional prompts to guide the copilot's responses.",
 	);
 
-export type CopilotSmartAssistContextResponse = z.infer<
-	typeof CopilotSmartAssistContextHookResponse
+export type CopilotSmartAssistContextHookResponse = z.infer<
+	typeof CopilotSmartAssistContextHookResponseSchema
 >;
