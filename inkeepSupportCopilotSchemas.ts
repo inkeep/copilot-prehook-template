@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+const isNonEmpty = (val: unknown): boolean => {
+	if (val === "") return false;
+	if (Array.isArray(val) && val.length === 0) return false;
+	if (val && typeof val === "object" && Object.keys(val).length === 0)
+		return false;
+	return val !== undefined && val !== null;
+};
+
 const MessageSchema = z.object({
 	id: z.string(),
 	createdAt: z.preprocess(
@@ -23,17 +31,29 @@ export type MessageType = z.infer<typeof MessageSchema>;
 
 export const CopilotSmartAssistContextHookRequestSchema = z.object({
 	ticketId: z.string(),
-	ticketAttributesData: z.record(
+	ticketAttributes: z.record(
 		z.string(),
-		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
+		z
+			.unknown()
+			.refine(isNonEmpty, {
+				message: "Value must not be empty or null/undefined",
+			}),
 	),
-	userAttributesData: z.record(
+	userAttributes: z.record(
 		z.string(),
-		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
+		z
+			.unknown()
+			.refine(isNonEmpty, {
+				message: "Value must not be empty or null/undefined",
+			}),
 	),
-	orgAttributesData: z.record(
+	organizationAttributes: z.record(
 		z.string(),
-		z.unknown().refine((val) => !!val, { message: "Value must be truthy" }),
+		z
+			.unknown()
+			.refine(isNonEmpty, {
+				message: "Value must not be empty or null/undefined",
+			}),
 	),
 	messages: z.array(MessageSchema),
 	ticketingPlatformType: z.enum(["zendesk", "github", "plain", "other"]),

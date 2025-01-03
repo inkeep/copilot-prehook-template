@@ -31,17 +31,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 		const {
 			ticketId,
 			ticketingPlatformType,
-			ticketAttributesData,
-			userAttributesData,
-			orgAttributesData,
+			ticketAttributes,
+			userAttributes,
+			organizationAttributes,
 			messages,
 		} = parsedRequest.data;
 		const result = await fetchYourData({
 			ticketId,
 			ticketingPlatformType,
-			ticketAttributesData,
-			userAttributesData,
-			orgAttributesData,
+			ticketAttributes,
+			userAttributes,
+			organizationAttributes,
 			messages,
 		});
 		return res.json({ success: true, data: result });
@@ -56,16 +56,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 async function fetchYourData({
 	ticketId,
 	ticketingPlatformType,
-	ticketAttributesData,
-	userAttributesData,
-	orgAttributesData,
+	ticketAttributes,
+	userAttributes,
+	organizationAttributes,
 	messages,
 }: {
 	ticketId: string;
 	ticketingPlatformType: string;
-	ticketAttributesData: Record<string, unknown>;
-	userAttributesData: Record<string, unknown>;
-	orgAttributesData: Record<string, unknown>;
+	ticketAttributes: Record<string, unknown>;
+	userAttributes: Record<string, unknown>;
+	organizationAttributes: Record<string, unknown>;
 	messages: MessageType[];
 }): Promise<CopilotSmartAssistContextHookResponse> {
 	// TODO: Write your business logic here
