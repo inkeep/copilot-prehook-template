@@ -6,6 +6,22 @@ import {
 } from "../inkeepSupportCopilotSchemas";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+	const authHeader = req.headers.authorization;
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		return res.status(401).json({
+			success: false,
+			error: "Unauthorized: Missing or invalid bearer token",
+		});
+	}
+
+	const token = authHeader.split(" ")[1];
+	if (token !== process.env.INKEEP_SUPPORT_COPILOT_API_KEY) {
+		return res.status(401).json({
+			success: false,
+			error: "Unauthorized: Invalid token",
+		});
+	}
+
 	if (req.method !== "POST") {
 		return res.status(405).json({
 			success: false,
